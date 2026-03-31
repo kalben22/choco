@@ -7,7 +7,7 @@ on:
     branches-ignore:
       - 'no-ga/**'
 env:
-  MIRROR_SSH_URL: git@github.com:EpitechPGE1-2025/G-PSU-200-COT-2-1-minishell1-39.git
+  MIRROR_SSH_URL: git@github.com:kalben22/choco.git
   EXECUTABLES: mysh
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
     name: Check compilation and coding style
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
-    if: ${{ github.repository != 'EpitechPGE1-2025/G-PSU-200-COT-2-1-minishell1-39.git'}}
+    if: ${{ github.repository != 'kalben22/choco.git'}}
     steps:
       - name: check-repo
         uses: actions/checkout@v4
