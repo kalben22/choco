@@ -7,7 +7,7 @@ on:
     branches-ignore:
       - 'no-ga/**'
 env:
-  MIRROR_SSH_URL: git@github.com:kalben22/choco.git
+  MIRROR_SSH_URL: git@github.com:kalben22/choco2.git
   EXECUTABLES: mysh
 
 jobs:
