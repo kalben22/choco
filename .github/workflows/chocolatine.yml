@@ -1,8 +1,11 @@
 name: Chocolatine Workflow
 on:
   push:
+    branches-ignore:
+      - 'no-ga/**'
   pull_request:
-
+    branches-ignore:
+      - 'no-ga/**'
 env:
   MIRROR_SSH_URL: git@github.com:EpitechPGE1-2025/G-PSU-200-COT-2-1-minishell1-39.git
   EXECUTABLES: mysh
