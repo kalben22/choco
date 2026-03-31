@@ -1,0 +1,6 @@
+# Coverage files
+*.gcda
+*.gcno
+
+# Editor backup files
+*~
