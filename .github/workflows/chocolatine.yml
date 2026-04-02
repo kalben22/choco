@@ -7,7 +7,6 @@ on:
   pull_request:
     branches-ignore:
       - 'no-ga/**'
-
 env:
   MIRROR_SSH_URL: git@github.com:kalben22/choco2.git
   EXECUTABLES: mysh
