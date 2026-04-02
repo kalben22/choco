@@ -1,49 +1,36 @@
 ##
-## EPITECH PROJECT, 2025
-## makefile
+## EPITECH PROJECT, 2019
+## Makefile
 ## File description:
-## write the makefile of this functions
+## rtfm
 ##
 
-NAME	=	mysh
+CC			=	gcc
 
-SRCS	=	src/my_strcat.c \
-		src/my_strcmp.c \
-		src/my_strlen.c \
-		src/my_strcpy.c \
-		src/test.c \
-		src/my_mini_printf.c \
-		src/my_str_to_words_array.c \
-		src/my_strdup.c \
-		src/execute_func.c \
-		src/func_to_free.c \
-		src/exec_cmd.c \
-		src/exec_process.c \
-		src/setenv.c \
-		src/my_strncmp.c \
-		src/new_env.c \
-		src/check_setenv.c \
-		src/unsetenv.c \
-		src/cleanstr.c
+SRC			=	print.c
 
-OBJS	=	$(SRCS:.c=.o)
+OBJ			=	$(SRC:.c=.o)
 
-CC	=	clang -g3
+NAME		=	binary
 
-all: $(NAME)
+$(NAME):	 $(OBJ)
+	$(CC) $(OBJ) -o $(NAME)
 
-$(NAME): $(SRCS)
-	 $(CC) $(SRCS) -o $(NAME)
+all:	$(NAME)
+
+tests_run:
+	make -C tests/
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJ)
 
-fclean:
+coverage:
+	@gcovr
+
+fclean: clean
 	rm -f $(NAME)
-re: fclean all
+	make fclean -C ./tests
 
-unit_tests: fclean $(NAME)
-	clang -o unit_tests src/my_mini_printf.c test/uni_test.c --coverage -lcriterion
+re:	fclean all
 
-tests_run: unit_tests
-	./unit_tests
+.PHONY:	$(NAME) all clean fclean
