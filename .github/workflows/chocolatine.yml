@@ -10,7 +10,7 @@ on:
 
 env:
   MIRROR_SSH_URL: "git@github.com:kalben22/choco2.git"
-  EXECUTABLES: "binaire"
+  EXECUTABLES: "mysh"
 
 jobs:
   check_compilation_and_coding_style:
