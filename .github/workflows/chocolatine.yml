@@ -33,17 +33,13 @@ jobs:
           if [ ! -f coding-style-reports.log ] || [ ! -s coding-style-reports.log ]; then
             exit 0
           fi
-
           while IFS= read -r line; do
-            # Format attendu dans le log : ./file.c:LINE: SEVERITY: CODE - message
             file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
             lineno=$(echo "$line" | cut -d':' -f2)
             severity=$(echo "$line" | cut -d':' -f3 | tr -d ' ')
             code_msg=$(echo "$line" | cut -d':' -f4-)
 
-            # Construire le titre selon le format affiché dans l'image
             title="${severity} coding style error: ${file}#L${lineno}"
-
             echo "::error file=${file},line=${lineno},title=${title}::${code_msg}"
           done < coding-style-reports.log
 
