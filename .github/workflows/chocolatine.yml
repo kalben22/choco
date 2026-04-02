@@ -9,8 +9,8 @@ on:
       - 'no-ga/**'
 
 env:
-  MIRROR_SSH_URL: git@github.com:kalben22/choco2.git
-  EXECUTABLES: mysh
+  MIRROR_SSH_URL: "git@github.com:kalben22/choco2.git"
+  EXECUTABLES: "binaire"
 
 jobs:
   check_compilation_and_coding_style:
