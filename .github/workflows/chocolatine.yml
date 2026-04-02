@@ -7,8 +7,9 @@ on:
   pull_request:
     branches-ignore:
       - 'no-ga/**'
+
 env:
-  MIRROR_SSH_URL: git@github.com:kalben22/choco3.git
+  MIRROR_SSH_URL: git@github.com:kalben22/choco2.git
   EXECUTABLES: mysh
 
 jobs:
@@ -16,7 +17,7 @@ jobs:
     name: Check compilation and coding style
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
-    if: ${{ github.repository != 'kalben22/choco3' }}
+    if: ${{ github.repository != 'kalben22/choco2' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,40 +25,37 @@ jobs:
           fetch-depth: 1
 
       - name: Check repository for coding style errors
-        run: banana-check-repo
+        run: banana-check-repo || true
+
+      - name: Display coding style errors and fail if any
+        run: |
+          if [ ! -f coding-style-reports.log ]; then
+            echo "No coding-style-reports.log found"
+            exit 0
+          fi
+          HAS_ERRORS=0
+          while IFS= read -r line; do
+            file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
+            lineno=$(echo "$line" | cut -d':' -f2)
+            severity=$(echo "$line" | cut -d':' -f3)
+            code=$(echo "$line" | cut -d':' -f4)
+            detail=$(echo "$line" | cut -d':' -f5- | sed 's/^ //')
+            case "$severity" in
+              MAJOR) label="Major" ;;
+              MINOR) label="Minor" ;;
+              INFO)  label="Info"  ;;
+              *)     label="$severity" ;;
+            esac
+            echo "::error file=${file},line=${lineno},title=${label} coding style error\: ${file}#L${lineno}::${code} - ${detail}"
+            HAS_ERRORS=1
+          done < coding-style-reports.log
+          exit $HAS_ERRORS
 
       - name: Compile project
         run: make
         timeout-minutes: 2
         env:
           CC: epiclang
-
-      - name: Display coding style errors as annotations
-        if: always()
-        run: |
-          if [ -f coding-style-reports.log ]; then
-            while IFS= read -r line; do
-              file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
-              lineno=$(echo "$line" | cut -d':' -f2)
-              severity=$(echo "$line" | cut -d':' -f3)
-              code=$(echo "$line" | cut -d':' -f4)
-              detail=$(echo "$line" | cut -d':' -f5- | sed 's/^ //')
-              case "$severity" in
-                MAJOR) label="Major" ;;
-                MINOR) label="Minor" ;;
-                INFO)  label="Info"  ;;
-                *)     label="$severity" ;;
-              esac
-              echo "::error file=${file},line=${lineno},title=${label} coding style error\: ${file}#L${lineno}::${code} - ${detail}"
-            done < coding-style-reports.log
-          fi
-
-      - name: Fail if any coding style errors exist
-        if: always()
-        run: |
-          if [ -f coding-style-reports.log ] && [ -s coding-style-reports.log ]; then
-            exit 1
-          fi
 
       - name: Clean project build artifacts
         run: make clean
@@ -80,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     needs: check_compilation_and_coding_style
-    if: ${{ github.repository != 'kalben22/choco3' }}
+    if: ${{ github.repository != 'kalben22/choco2' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -95,7 +93,7 @@ jobs:
     name: Push to mirror repository
     runs-on: ubuntu-latest
     needs: run_tests
-    if: ${{ github.event_name == 'push' && github.repository != 'kalben22/choco3' }}    
+    if: ${{ github.event_name == 'push' && github.repository != 'kalben22/choco2' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
