@@ -29,10 +29,26 @@ jobs:
 
       - name: Display coding style errors and fail if any
         run: |
-          if [ ! -f coding-style-reports.log ]; then
-            echo "No coding-style-reports.log found"
+          # Chercher le log dans plusieurs endroits possibles
+          LOG_FILE=""
+          if [ -f coding-style-reports.log ]; then
+            LOG_FILE="coding-style-reports.log"
+          elif [ -f /tmp/coding-style-reports.log ]; then
+            LOG_FILE="/tmp/coding-style-reports.log"
+          else
+            FOUND=$(find / -name "coding-style-reports.log" \
+              -not -path "*/proc/*" \
+              -not -path "*/sys/*" \
+              2>/dev/null | head -1)
+            [ -n "$FOUND" ] && LOG_FILE="$FOUND"
+          fi
+
+          if [ -z "$LOG_FILE" ] || [ ! -s "$LOG_FILE" ]; then
+            echo "Aucune erreur de coding style detectee"
             exit 0
           fi
+
+          # Afficher les annotations et compter les erreurs
           HAS_ERRORS=0
           while IFS= read -r line; do
             file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
@@ -48,7 +64,7 @@ jobs:
             esac
             echo "::error file=${file},line=${lineno},title=${label} coding style error\: ${file}#L${lineno}::${code} - ${detail}"
             HAS_ERRORS=1
-          done < coding-style-reports.log
+          done < "$LOG_FILE"
           exit $HAS_ERRORS
 
       - name: Compile project
@@ -68,7 +84,7 @@ jobs:
               exit 1
             fi
             if [ ! -x "$executable" ]; then
-              echo "::error title=Non-executable file::File '$executable' exists but is not executable"
+              echo "::error title=Non-executable::File '$executable' is not executable"
               exit 1
             fi
           done
