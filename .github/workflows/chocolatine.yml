@@ -27,21 +27,31 @@ jobs:
       - name: Check repository for banned/unwanted files
         run: banana-check-repo
 
+      - name: Compile project with epiclang (generates coding style report)
+        run: make CC=epiclang 2>&1 | tee coding-style-reports.log
+        timeout-minutes: 2
+
       - name: Report coding style errors as annotations
         if: always()
         run: |
-          if [ ! -f coding-style-reports.log ] || [ ! -s coding-style-reports.log ]; then
+          ERRORS=$(grep "\[Banana\]" coding-style-reports.log 2>/dev/null || true)
+
+          if [ -z "$ERRORS" ]; then
+            echo "No coding style errors detected"
             exit 0
           fi
-          while IFS= read -r line; do
-            file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
-            lineno=$(echo "$line" | cut -d':' -f2)
-            severity=$(echo "$line" | cut -d':' -f3 | tr -d ' ')
-            code_msg=$(echo "$line" | cut -d':' -f4-)
+
+          echo "$ERRORS" | while IFS= read -r line; do
+            # Format réel : src/file.c:LINE:COL: warning: [Banana] [SEVERITY] message (CODE)
+            file=$(echo "$line" | grep -oP '^[^:]+')
+            lineno=$(echo "$line" | grep -oP '^\S+:(\d+):' | cut -d':' -f2)
+            severity=$(echo "$line" | grep -oP '\[Banana\] \[\K[^\]]+')
+            code=$(echo "$line" | grep -oP '\(C-\w+\)' | tail -1 | tr -d '()')
+            message=$(echo "$line" | grep -oP '\[Banana\] \[[^\]]+\] \K[^(]+' | sed 's/ $//')
 
             title="${severity} coding style error: ${file}#L${lineno}"
-            echo "::error file=${file},line=${lineno},title=${title}::${code_msg}"
-          done < coding-style-reports.log
+            echo "::error file=${file},line=${lineno},title=${title}::${code} - ${message}"
+          done
 
       - name: Fail if any coding style errors exist
         if: always()
