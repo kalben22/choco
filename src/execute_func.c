@@ -11,6 +11,7 @@ int execute_func(char **env, char **cmd)
 {
     char *path = malloc(sizeof(char) * 50);
     int i = 0;
+    nani
     char **tab = new_path(env);
 
     if (access(cmd[0], X_OK) == 0)
