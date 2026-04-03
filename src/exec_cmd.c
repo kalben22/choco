@@ -9,15 +9,12 @@
 
 char *recup_home(char **env)
 {
-    char *token = NULL;
-    
-    int i = 0;
+char *token = NULL;
+        int i = 0;
 
     while (env[i] != NULL) {
     token = strtok(env[i], "=");
-        if (my_strcmp(token, "HOME") == 0) {
-            return my_strdup(env[i] + 5);
-        }
+        if (my_strcmp(token, "HOME") == 0) {return my_strdup(env[i] + 5);}
         i++;
     }
     return NULL;
