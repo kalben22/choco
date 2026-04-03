@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     if: ${{ github.repository != 'kalben22/choco2' }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,35 +27,37 @@ jobs:
       - name: Check repository for banned/unwanted files
         run: banana-check-repo
 
-      - name: Compile project with epiclang (generate report)
-        run: |
-          make CC=epiclang 2>&1 | tee coding-style-reports.log
+      - name: Compile project with epiclang (generates coding style report)
+        run: make CC=epiclang 2>&1 | tee coding-style-reports.log
         timeout-minutes: 2
 
       - name: Report coding style errors as annotations
         if: always()
         run: |
-          if [ ! -f coding-style-reports.log ] || [ ! -s coding-style-reports.log ]; then
+          ERRORS=$(grep "\[Banana\]" coding-style-reports.log 2>/dev/null || true)
+
+          if [ -z "$ERRORS" ]; then
             echo "No coding style errors detected"
             exit 0
           fi
 
-          while IFS= read -r line; do
-            file=$(echo "$line" | cut -d':' -f1)
+          echo "$ERRORS" | while IFS= read -r line; do
+            file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
             lineno=$(echo "$line" | cut -d':' -f2)
-            col=$(echo "$line" | cut -d':' -f3)
-            message=$(echo "$line" | cut -d':' -f4-)
 
-            if [[ "$line" == *"[Banana]"* ]]; then
-              echo "::error file=${file},line=${lineno},col=${col}::${message}"
-            fi
-          done < coding-style-reports.log
+            banana_part=$(echo "$line" | grep -oP '\[Banana\] \K.*')
+            severity=$(echo "$banana_part" | cut -d' ' -f1)
+            code_msg=$(echo "$banana_part" | cut -d' ' -f2-)
+
+            title="${severity} coding style error: ${file}#L${lineno}"
+            echo "::error file=${file},line=${lineno},title=${title}::${code_msg}"
+          done
 
       - name: Fail if any coding style errors exist
         if: always()
         run: |
-          if grep -q "\[Banana\]" coding-style-reports.log; then
-            echo "Coding style errors detected"
+          if grep -q "\[Banana\]" coding-style-reports.log 2>/dev/null; then
+            echo "Coding style errors detected, failing the job"
             exit 1
           fi
 
@@ -83,7 +84,6 @@ jobs:
     container: epitechcontent/epitest-docker
     needs: check_compilation_and_coding_style
     if: ${{ github.repository != 'kalben22/choco2' }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -99,7 +99,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: run_tests
     if: ${{ github.event_name == 'push' && github.repository != 'kalben22/choco2' }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
