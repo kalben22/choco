@@ -15,7 +15,7 @@ static int my_putchar(char c)
 static int my_putstr(char const *str)
 {
 int i = 0;
-    nani
+    
     while (str[i] != '\0') {
         my_putchar(str[i]);
         i++;

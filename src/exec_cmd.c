@@ -10,7 +10,7 @@
 char *recup_home(char **env)
 {
     char *token = NULL;
-    esde
+    
     int i = 0;
 
     while (env[i] != NULL) {

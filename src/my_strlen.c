@@ -11,7 +11,7 @@
 int my_strlen(char const *str)
 {
     int i = 0;
-je ne sais pas ohh
+
     if (str == NULL)
         return 0;
     while (str[i] != '\0') {

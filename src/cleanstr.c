@@ -9,8 +9,8 @@
 
 void tab_equal(char *str)
 {
-int i = 0;
-nani
+    int i = 0;
+
     for (i = 0; str[i]; i++)
         if (str[i] == '\t')
             str[i] = ' ';
