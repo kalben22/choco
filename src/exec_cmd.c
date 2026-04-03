@@ -9,6 +9,7 @@
 
 char *recup_home(char **env)
 {    
+    //CHange the name of the function to recup_home
     char *token = NULL;
     int i = 0;
 
