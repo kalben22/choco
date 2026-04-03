@@ -24,23 +24,29 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Check repository for coding style errors
+      - name: Check repository for banned/unwanted files
         run: banana-check-repo
+
+      - name: Compile project with epiclang (generates coding style report)
+        run: make
+        timeout-minutes: 2
+        env:
+          CC: epiclang
 
       - name: Report coding style errors as annotations
         if: always()
         run: |
           if [ ! -f coding-style-reports.log ] || [ ! -s coding-style-reports.log ]; then
+            echo "No coding style errors detected"
             exit 0
           fi
           while IFS= read -r line; do
             file=$(echo "$line" | cut -d':' -f1 | sed 's|^\./||')
             lineno=$(echo "$line" | cut -d':' -f2)
-            severity=$(echo "$line" | cut -d':' -f3 | tr -d ' ')
-            code_msg=$(echo "$line" | cut -d':' -f4-)
-
+            severity=$(echo "$line" | cut -d':' -f3 | sed 's/^ //;s/ $//')
+            details=$(echo "$line" | cut -d':' -f4- | sed 's/^ //')
             title="${severity} coding style error: ${file}#L${lineno}"
-            echo "::error file=${file},line=${lineno},title=${title}::${code_msg}"
+            echo "::error file=${file},line=${lineno},title=${title}::${details}"
           done < coding-style-reports.log
 
       - name: Fail if any coding style errors exist
@@ -49,12 +55,6 @@ jobs:
           if [ -f coding-style-reports.log ] && [ -s coding-style-reports.log ]; then
             exit 1
           fi
-
-      - name: Compile project
-        run: make
-        timeout-minutes: 2
-        env:
-          CC: epiclang
 
       - name: Clean project build artifacts
         run: make clean
