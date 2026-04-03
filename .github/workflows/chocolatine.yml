@@ -17,80 +17,60 @@ jobs:
     name: Check compilation and coding style
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
-    if: ${{ github.repository != 'kalben22/choco2' }}
+    if: github.repository != 'kalben22/choco2'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Check repository for banned/unwanted files
+      - name: Check for banned files
         run: banana-check-repo
 
-      - name: Compile project with epiclang (generates coding style report)
+      - name: Compile and generate coding style report
         run: make CC=epiclang 2>&1 | tee coding-style-reports.log
         timeout-minutes: 2
 
-      - name: Report coding style errors as annotations
+      - name: Annotate coding style errors
         if: always()
         run: |
-          ERRORS=$(grep "\[Banana\]" coding-style-reports.log 2>/dev/null || true)
-
-          if [ -z "$ERRORS" ]; then
-            echo "No coding style errors detected"
-            exit 0
-          fi
-
-          echo "$ERRORS" | while IFS= read -r line; do
-            # Format réel : src/file.c:LINE:COL: warning: [Banana] [SEVERITY] message (CODE)
-            file=$(echo "$line" | grep -oP '^[^:]+')
-            lineno=$(echo "$line" | grep -oP '^\S+:(\d+):' | cut -d':' -f2)
+          grep "Banana" coding-style-reports.log 2>/dev/null | while IFS= read -r line; do
+            file=$(echo "$line"     | grep -oP '^[^:]+')
+            lineno=$(echo "$line"   | grep -oP '^\S+:\K\d+(?=:\d+:)')
             severity=$(echo "$line" | grep -oP '\[Banana\] \[\K[^\]]+')
-            code=$(echo "$line" | grep -oP '\(C-\w+\)' | tail -1 | tr -d '()')
-            message=$(echo "$line" | grep -oP '\[Banana\] \[[^\]]+\] \K[^(]+' | sed 's/ $//')
-
-            title="${severity} coding style error: ${file}#L${lineno}"
-            echo "::error file=${file},line=${lineno},title=${title}::${code} - ${message}"
+            code=$(echo "$line"     | grep -oP '\(C-\w+\)' | tr -d '()')
+            message=$(echo "$line"  | grep -oP '\[Banana\] \[[^\]]+\] \K[^(]+' | sed 's/ $//')
+            echo "::error file=${file},line=${lineno},title=${severity} coding style error: ${file}#L${lineno}::${code} - ${message}"
           done
+          exit 0
 
-      - name: Fail if any coding style errors exist
+      - name: Fail if coding style errors exist
         if: always()
-        run: |
-          if grep -q "\[Banana\]" coding-style-reports.log 2>/dev/null; then
-            echo "Coding style errors detected, failing the job"
-            exit 1
-          fi
+        run: grep -q "Banana" coding-style-reports.log 2>/dev/null && exit 1 || exit 0
 
-      - name: Clean project build artifacts
+      - name: Clean build artifacts
         run: make clean
 
-      - name: Check that executables exist and are executable
+      - name: Verify executables
         run: |
-          FAIL=0
-          for exec in $(echo "$EXECUTABLES" | tr ',' '\n'); do
-            if [ ! -f "$exec" ]; then
-              echo "::error file=${exec}::Executable '${exec}' was not found"
-              FAIL=1
-            elif [ ! -x "$exec" ]; then
-              echo "::error file=${exec}::Executable '${exec}' is not executable"
-              FAIL=1
-            fi
+          for exec in $(echo "$EXECUTABLES" | tr ',' ' '); do
+            [ ! -f "$exec" ] && echo "::error::'$exec' not found" && exit 1
+            [ ! -x "$exec" ] && echo "::error::'$exec' is not executable" && exit 1
           done
-          exit $FAIL
 
   run_tests:
     name: Run tests
     runs-on: ubuntu-latest
     container: epitechcontent/epitest-docker
     needs: check_compilation_and_coding_style
-    if: ${{ github.repository != 'kalben22/choco2' }}
+    if: github.repository != 'kalben22/choco2'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Run unit tests
+      - name: Run tests
         run: make tests_run
         timeout-minutes: 2
 
@@ -98,14 +78,14 @@ jobs:
     name: Push to mirror repository
     runs-on: ubuntu-latest
     needs: run_tests
-    if: ${{ github.event_name == 'push' && github.repository != 'kalben22/choco2' }}
+    if: github.event_name == 'push' && github.repository != 'kalben22/choco2'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Mirror repository to Epitech
+      - name: Mirror to Epitech repository
         uses: pixta-dev/repository-mirroring-action@v1
         with:
           target_repo_url: ${{ env.MIRROR_SSH_URL }}
