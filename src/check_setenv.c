@@ -23,7 +23,7 @@ int isanum   (char *c)
 
 int my_strisalpha(char *c)
 {
-    int i = 0;
+int i = 0;
 
     if ((c[i] >= 'a' && c[i] <= 'z') || (c[i] >= 'A' && c[i] <= 'Z'))
         return 1;
@@ -43,8 +43,8 @@ int check_arg(char **env, char **tab, int i)
     }
     i = 1;
     if (my_strisalpha(tab[i]) == -1) {
-        mini_printf("%s: Variable name must begin with a letter.\n",
-            tab[0]);
+    mini_printf("%s: Variable name must begin with a letter.\n",
+    tab[0]);
         return 1;
     }
     if (isanum(tab[i]) == -1) {
@@ -57,7 +57,7 @@ int check_arg(char **env, char **tab, int i)
 
 int check_setenv(char **tab, char **env)
 {
-    int i = 0;
+int i = 0;
 
     while (tab[i] != NULL)
         i++;
